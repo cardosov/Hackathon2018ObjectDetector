@@ -12,7 +12,7 @@ hostname = '172.20.43.25'
 entity_id = '4ebdd60e-ef5e-437f-aae3-b93254037313'
 entity_value = 'WeIYm5Wxb44PX00dE0LyF88nttxazIZU'
 
-def worker(objName, dangerousObj, level):
+def worker(objName, dangerousObj, level, imgB64):
     credentials = EntityCredentials(entity_id, entity_value)
 
     endpoint = LumadaEndpoint(hostname, trust_certs=True, require_secure=True)
@@ -25,12 +25,13 @@ def worker(objName, dangerousObj, level):
     payload['object'] = objName
     payload['dangerous'] = dangerousObj
     payload['level'] = level
+    payload['png'] = imgB64
 
     client.publish_state(payload)
     print("finished... payload: %s " % payload)
 
-def publish_state(obj):
+def publish_data(obj):
     for i in range(1):
-        t = Thread(target=worker, args=(obj['name'], obj['danger'], obj['level']))
+        t = Thread(target=worker, args=(obj['name'], obj['danger'], obj['level'], obj['png']))
         t.daemon = True
         t.start()

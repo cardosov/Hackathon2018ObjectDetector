@@ -5,6 +5,7 @@ import argparse
 import multiprocessing
 import numpy as np
 import tensorflow as tf
+import base64
 
 from utils.app_utils import FPS, WebcamVideoStream
 from multiprocessing import Queue, Pool
@@ -29,7 +30,7 @@ categories = label_map_util.convert_label_map_to_categories(label_map, max_num_c
 category_index = label_map_util.create_category_index(categories)
 
 
-def detect_objects(image_np, sess, detection_graph):
+def detect_objects(image_np, sess, detection_graph, b64):
     # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
     image_np_expanded = np.expand_dims(image_np, axis=0)
     image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
@@ -56,7 +57,8 @@ def detect_objects(image_np, sess, detection_graph):
         np.squeeze(scores),
         category_index,
         use_normalized_coordinates=True,
-        line_thickness=8)
+        line_thickness=8,
+        b64=b64)
 
     return image_np
 
@@ -71,14 +73,24 @@ def worker(input_q, output_q):
             od_graph_def.ParseFromString(serialized_graph)
             tf.import_graph_def(od_graph_def, name='')
 
-        sess = tf.Session(graph=detection_graph)
+        session_conf = tf.ConfigProto(intra_op_parallelism_threads=2, inter_op_parallelism_threads=2)
+        #config = tf.ConfigProto(device_count={'CPU': 1})
+        sess = tf.Session(graph=detection_graph,config=session_conf)
 
     fps = FPS().start()
     while True:
         fps.update()
         frame = input_q.get()
+        cnt = cv2.imencode('.png',frame)[1]
+        b64 = base64.b64encode(cnt)
+        b64 = b64.decode('utf-8')
+
+        #text_file = open("/home/vcardoso/Output.txt", "w")
+        #text_file.write("%s" % b64)
+        #text_file.close()
+
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        output_q.put(detect_objects(frame_rgb, sess, detection_graph))
+        output_q.put(detect_objects(frame_rgb, sess, detection_graph,b64))
 
     fps.stop()
     sess.close()

@@ -15,19 +15,23 @@ dangerous_items_score = [100, #knife
                    10, #bottle
                     20 #fork
                    ]
-def check_if_is_a_dangerous_object( image_obj, score ):
+def check_if_is_a_dangerous_object( image_obj, score, imageB64=None ):
     s = set(dangerous_items)
+
+
 
     image_obj['danger']=0
     image_obj['timestamp']=time.time()
     image_obj['level'] = 0
+    image_obj['png'] = ""
 	
     if image_obj ['id'] in s:
         idx = dangerous_items.index(image_obj ['id'])
         image_obj['danger']=1
         image_obj['level'] = dangerous_items_score[idx]
+        image_obj['png'] = imageB64
 
     register_dangerous_object_alert(image_obj)
 
 def register_dangerous_object_alert( image_obj ):
-    lumada_stuff.publish_state(image_obj)
+    lumada_stuff.publish_data(image_obj)

@@ -332,7 +332,8 @@ def visualize_boxes_and_labels_on_image_array(image,
                                               max_boxes_to_draw=20,
                                               min_score_thresh=.5,
                                               agnostic_mode=False,
-                                              line_thickness=4):
+                                              line_thickness=4,
+                                              b64=None):
   """Overlay labeled boxes on an image with formatted scores and label names.
 
   This function groups boxes that correspond to the same location
@@ -389,7 +390,7 @@ def visualize_boxes_and_labels_on_image_array(image,
               else:
                 class_name = 'N/A'
 
-              dangerous_objects.check_if_is_a_dangerous_object(category_index[classes[i]], int(100*scores[i]))
+              dangerous_objects.check_if_is_a_dangerous_object(category_index[classes[i]], int(100*scores[i]), imageB64=b64)
 
               display_str = '{}: {}%'.format(
                   class_name,
